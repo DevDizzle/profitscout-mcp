@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "profitscout": {
+      "url": "https://profitscout-mcp-469352939749.us-central1.run.app/sse",
+      "transport": "sse"
+    }
+  }
+}

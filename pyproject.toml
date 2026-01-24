@@ -1,0 +1,35 @@
+[project]
+name = "profitscout-mcp"
+version = "1.0.0"
+description = "ProfitScout MCP Server - Agent-first options trading intelligence"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=2.6.1",
+    "google-api-python-client>=2.0.0",
+    "google-cloud-bigquery>=3.11.0",
+    "google-cloud-storage>=2.10.0",
+    "google-cloud-firestore>=2.11.0",
+    "httpx>=0.24.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.0.280",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
