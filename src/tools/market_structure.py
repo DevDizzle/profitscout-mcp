@@ -5,7 +5,6 @@ Analyzes options chain structure to find support/resistance walls, sentiment, an
 
 import json
 import logging
-from typing import Optional
 
 from data.bigquery_client import BigQueryClient
 
@@ -18,18 +17,18 @@ bq_client = BigQueryClient()
 async def analyze_market_structure(
     ticker: str,
     as_of: str = "latest",
-    sort_by: Optional[str] = None,
-    expiration_date: Optional[str] = None,
-    option_type: Optional[str] = None,
-    limit: int = 20
+    sort_by: str | None = None,
+    expiration_date: str | None = None,
+    option_type: str | None = None,
+    limit: int = 20,
 ) -> str:
     """Analyze options market structure or find specific contracts.
-    
+
     **Modes:**
     1. **Structure Analysis (Default):** Returns Vol/OI Walls (Support/Resistance) and Put/Call Ratios.
        - Use this to validate trade levels and sentiment.
        - Leave `sort_by` empty.
-    
+
     2. **Contract Scanner (Detail View):** Returns specific contracts with Greeks (Gamma, Delta).
        - Use this to find "High Gamma" options or specific strikes.
        - Set `sort_by` to "gamma", "delta", "volume", "oi", or "iv".
@@ -58,7 +57,7 @@ async def analyze_market_structure(
                 limit=limit,
                 option_type=option_type,
                 expiration_date=expiration_date,
-                as_of=as_of
+                as_of=as_of,
             )
         else:
             # Aggregate View (Structure)

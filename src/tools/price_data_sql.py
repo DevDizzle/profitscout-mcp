@@ -19,7 +19,7 @@ async def run_price_query(query: str) -> str:
 
     Allows for flexible querying of historical price and volume data.
     The table contains: ticker, date, open, high, low, adj_close, volume.
-    
+
     Example Queries:
     1. "SELECT * FROM `profitscout-lx6bb.profit_scout.price_data` WHERE ticker = 'AAPL' ORDER BY date DESC LIMIT 5"
     2. "SELECT ticker, date, volume FROM `profitscout-lx6bb.profit_scout.price_data` WHERE volume > 10000000 LIMIT 10"

@@ -6,8 +6,6 @@ Validates API keys and tracks usage for billing
 import hashlib
 import logging
 import os
-from datetime import datetime
-from typing import Optional
 
 from google.cloud import firestore
 
@@ -20,7 +18,7 @@ class AuthMiddleware:
     def __init__(self):
         self.require_api_key = os.getenv("REQUIRE_API_KEY", "false").lower() == "true"
         self.project_id = os.getenv("GCP_PROJECT_ID")
-        
+
         if self.require_api_key:
             self.db = firestore.Client(project=self.project_id)
             self.users_collection = os.getenv("FIRESTORE_COLLECTION_USERS", "taas_users")
@@ -33,7 +31,7 @@ class AuthMiddleware:
         """Hash an API key for secure storage comparison."""
         return hashlib.sha256(api_key.encode()).hexdigest()
 
-    async def validate_api_key(self, api_key: Optional[str]) -> dict:
+    async def validate_api_key(self, api_key: str | None) -> dict:
         """Validate an API key and return user information.
 
         Args:
@@ -104,18 +102,22 @@ class AuthMiddleware:
         try:
             # Increment usage counter in user document
             user_ref = self.db.collection(self.users_collection).document(user_id)
-            user_ref.update({
-                "usage_count": firestore.Increment(1),
-                "last_used_at": firestore.SERVER_TIMESTAMP,
-            })
+            user_ref.update(
+                {
+                    "usage_count": firestore.Increment(1),
+                    "last_used_at": firestore.SERVER_TIMESTAMP,
+                }
+            )
 
             # Log usage event
             usage_ref = self.db.collection(self.usage_collection)
-            usage_ref.add({
-                "user_id": user_id,
-                "tool_name": tool_name,
-                "timestamp": firestore.SERVER_TIMESTAMP,
-            })
+            usage_ref.add(
+                {
+                    "user_id": user_id,
+                    "tool_name": tool_name,
+                    "timestamp": firestore.SERVER_TIMESTAMP,
+                }
+            )
 
             logger.info(f"Tracked usage: user={user_id}, tool={tool_name}")
 

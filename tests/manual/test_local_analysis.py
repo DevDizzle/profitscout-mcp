@@ -1,7 +1,7 @@
 import asyncio
+import logging
 import os
 import sys
-import logging
 
 # Add src to path so imports work
 sys.path.append(os.path.join(os.getcwd(), "src"))
@@ -16,6 +16,7 @@ load_dotenv()
 
 from tools.stock_analysis import get_stock_analysis
 
+
 async def main():
     print("----------------------------------------------------------------")
     print("🔍 Testing get_stock_analysis('GOOG') locally...")
@@ -26,7 +27,7 @@ async def main():
     try:
         # Call the tool directly
         result_json = await get_stock_analysis("GOOG")
-        
+
         # Check if we got an error response in the JSON
         if '"error":' in result_json:
             print("❌ Tool returned an error:")
@@ -35,9 +36,10 @@ async def main():
             print("✅ Success! Data retrieved.")
             print("   Response Preview (first 500 chars):")
             print("   " + result_json[:500] + "...")
-            
+
     except Exception as e:
         print(f"❌ Python Exception occurred: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

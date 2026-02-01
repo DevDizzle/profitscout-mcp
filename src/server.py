@@ -5,7 +5,6 @@ Agent-first options trading intelligence platform
 
 import logging
 import os
-from typing import Optional
 
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
@@ -21,29 +20,26 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize FastMCP server
-mcp = FastMCP(
-    name="profitscout",
-    host="0.0.0.0",
-    port=int(os.getenv("PORT", "8080"))
-)
+mcp = FastMCP(name="profitscout", host="0.0.0.0", port=int(os.getenv("PORT", "8080")))
 
 # Import authentication middleware (Phase 2)
 # from auth.middleware import auth_middleware
 
 # Import tools
-from tools.winners_dashboard import get_winners_dashboard
-from tools.stock_analysis import get_stock_analysis
-from tools.fundamental_deep_dive import get_macro_thesis, get_mda_analysis, get_transcript_analysis
-from tools.market_structure import analyze_market_structure
-from tools.technical_analysis import get_technical_analysis
-from tools.news_analysis import get_news_analysis
 from tools.business_summary import get_business_summary
-from tools.fundamental_analysis import get_fundamental_analysis
-from tools.financial_analysis import get_financial_analysis
-from tools.price_data_sql import run_price_query
-from tools.market_events import get_market_events
-from tools.web_search import web_search
 from tools.customer_service import get_support_policy
+from tools.financial_analysis import get_financial_analysis
+from tools.fundamental_analysis import get_fundamental_analysis
+from tools.fundamental_deep_dive import get_macro_thesis, get_mda_analysis, get_transcript_analysis
+from tools.market_events import get_market_events
+from tools.market_structure import analyze_market_structure
+from tools.news_analysis import get_news_analysis
+from tools.performance_tracker import get_performance_summary, get_performance_tracker
+from tools.price_data_sql import run_price_query
+from tools.stock_analysis import get_stock_analysis
+from tools.technical_analysis import get_technical_analysis
+from tools.web_search import web_search
+from tools.winners_dashboard import get_winners_dashboard
 
 # Register tools with the MCP server
 mcp.tool()(get_winners_dashboard)
@@ -61,6 +57,8 @@ mcp.tool()(run_price_query)
 mcp.tool()(get_market_events)
 mcp.tool()(web_search)
 mcp.tool()(get_support_policy)
+mcp.tool()(get_performance_tracker)
+mcp.tool()(get_performance_summary)
 
 # Expose ASGI app for production servers
 try:
@@ -80,16 +78,16 @@ try:
     # Fix HTTP 421 errors by Monkey Patching TrustedHostMiddleware to bypass all checks
     try:
         from starlette.middleware.trustedhost import TrustedHostMiddleware
-        
+
         # Define a permissive call method that bypasses checks
         async def permissive_call(self, scope, receive, send):
             # Bypass host check logic completely and just call the app
             await self.app(scope, receive, send)
-            
+
         # Apply the monkey patch to the class itself
         TrustedHostMiddleware.__call__ = permissive_call
         logger.info("Monkey-patched TrustedHostMiddleware to bypass all host checks")
-        
+
     except ImportError:
         logger.warning("Could not import TrustedHostMiddleware for patching, skipping.")
     except Exception as e:
@@ -102,24 +100,27 @@ except Exception as e:
         from starlette.applications import Starlette
         from starlette.responses import JSONResponse
         from starlette.routing import Route
-        
+
         async def homepage(request):
             return JSONResponse({"error": "MCP App failed to load", "details": str(e)})
-            
+
         app = Starlette(routes=[Route("/", homepage)])
     except ImportError:
         # If starlette is missing (unlikely given fastmcp deps), just fail
         raise e
+
 
 def main():
     """Run the MCP server."""
     logger.info("========================================")
     logger.info("ProfitScout MCP Server")
     logger.info("========================================")
-    logger.info(f"Version: 1.0.0")
+    logger.info("Version: 1.0.0")
     logger.info(f"Project ID: {os.getenv('GCP_PROJECT_ID')}")
     logger.info(f"Port: {os.getenv('PORT', '8080')}")
-    logger.info(f"Authentication: {'Enabled' if os.getenv('REQUIRE_API_KEY', 'false').lower() == 'true' else 'Disabled'}")
+    logger.info(
+        f"Authentication: {'Enabled' if os.getenv('REQUIRE_API_KEY', 'false').lower() == 'true' else 'Disabled'}"
+    )
     logger.info("========================================")
     logger.info("")
     logger.info("Available tools:")
@@ -138,15 +139,16 @@ def main():
     logger.info("  13. get_market_events - Get upcoming calendar events (Earnings, Econ)")
     logger.info("  14. web_search - Search the web for real-time info")
     logger.info("  15. get_support_policy - Get customer service policy/FAQ")
+    logger.info("  16. get_performance_tracker - Get signal performance history")
+    logger.info("  17. get_performance_summary - Get aggregate performance stats")
     logger.info("")
     logger.info("Starting server...")
-    
+
     # Run the server with SSE transport
     # Host and port are configured in FastMCP initialization
     port = int(os.getenv("PORT", "8080"))
     logger.info(f"Binding to host: 0.0.0.0 and port: {port}")
     mcp.run(transport="sse")
-
 
 
 if __name__ == "__main__":

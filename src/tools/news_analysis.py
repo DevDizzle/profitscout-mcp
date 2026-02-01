@@ -19,7 +19,7 @@ async def get_news_analysis(ticker: str, as_of: str = "latest") -> str:
 
     Returns analysis from ProfitScout's news_analyzer pipeline,
     identifying material catalysts and sentiment shifts.
-    
+
     The 'score' field is a sentiment score from 0.0 (Very Bearish) to 1.0 (Very Bullish).
     - 0.0 - 0.2: Strong Sell / Negative
     - 0.2 - 0.4: Sell / Bearish

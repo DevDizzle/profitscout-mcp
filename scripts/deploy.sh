@@ -6,7 +6,7 @@
 set -e  # Exit on error
 
 # Configuration
-PROJECT_ID="${GCP_PROJECT_ID:-profitscout-fida8}"
+PROJECT_ID="${GCP_PROJECT_ID:-profitscout-lx6bb}"
 REGION="${GCP_REGION:-us-central1}"
 SERVICE_NAME="profitscout-mcp"
 REPOSITORY_NAME="profitscout-mcp"
@@ -57,7 +57,7 @@ gcloud run deploy $SERVICE_NAME \
     --cpu=1 \
     --timeout=300 \
     --max-instances=10 \
-    --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID,GCP_REGION=$REGION,BIGQUERY_DATASET=profit_scout,GCS_BUCKET_NAME=profit-scout,GOOGLE_CSE_ID=9715367a7f3204eb9,GOOGLE_API_KEY=AIzaSyBb9FgdwXCWVCobSDvM_msokaSBS77Z8GM"
+    --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID,GCP_REGION=$REGION,BIGQUERY_DATASET=profit_scout,GCS_BUCKET_NAME=profit-scout-data,GOOGLE_CSE_ID=${GOOGLE_CSE_ID},GOOGLE_API_KEY=${GOOGLE_API_KEY}"
 
 echo ""
 echo "========================================="

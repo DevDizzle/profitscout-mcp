@@ -1,9 +1,10 @@
-import os
 import logging
+import os
+
 import requests
-from typing import Optional
 
 logger = logging.getLogger(__name__)
+
 
 def web_search(query: str, num_results: int = 5) -> str:
     """
@@ -28,21 +29,21 @@ def web_search(query: str, num_results: int = 5) -> str:
         "key": api_key,
         "cx": cse_id,
         "q": query,
-        "num": min(num_results, 10)  # API limit is 10
+        "num": min(num_results, 10),  # API limit is 10
     }
 
     try:
         response = requests.get(url, params=params, timeout=10)
-        
+
         if response.status_code == 403:
             logger.error(f"Web Search 403 Forbidden: {response.text}")
             return "Error: 403 Forbidden. Please check your GOOGLE_API_KEY and GOOGLE_CSE_ID."
-            
+
         response.raise_for_status()
         data = response.json()
 
         items = data.get("items", [])
-        
+
         if not items:
             return f"No results found for query: '{query}'"
 
@@ -53,13 +54,9 @@ def web_search(query: str, num_results: int = 5) -> str:
             snippet = item.get("snippet", "No Snippet")
             link = item.get("link", "No Link")
             source = item.get("displayLink", "Unknown Source")
-            
+
             formatted_results.append(
-                f"Result {i}:\n"
-                f"Source: {source}\n"
-                f"Title: {title}\n"
-                f"URL: {link}\n"
-                f"Summary: {snippet}\n"
+                f"Result {i}:\nSource: {source}\nTitle: {title}\nURL: {link}\nSummary: {snippet}\n"
             )
 
         return "\n---\n".join(formatted_results)

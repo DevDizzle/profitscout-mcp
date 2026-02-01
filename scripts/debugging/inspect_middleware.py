@@ -1,7 +1,5 @@
-
-import sys
 import os
-import logging
+import sys
 
 # Add src to path
 sys.path.append(os.path.join(os.getcwd(), "src"))
@@ -11,11 +9,10 @@ os.environ["GCP_PROJECT_ID"] = "profitscout-fida8"
 
 try:
     from server import app
-    from starlette.middleware.trustedhost import TrustedHostMiddleware
-    
+
     print("\n=== App Inspection ===")
     print(f"App Type: {type(app)}")
-    
+
     print("\n--- app.user_middleware ---")
     if hasattr(app, "user_middleware"):
         for m in app.user_middleware:
@@ -32,8 +29,8 @@ try:
     if hasattr(app, "routes"):
         for route in app.routes:
             print(f"- {route.path} ({type(route).__name__}) name={getattr(route, 'name', 'N/A')}")
-            if type(route).__name__ == 'Mount':
-                sub_app = getattr(route, 'app', None)
+            if type(route).__name__ == "Mount":
+                sub_app = getattr(route, "app", None)
                 print(f"  -> Mounted App: {type(sub_app)}")
                 if hasattr(sub_app, "user_middleware"):
                     print(f"  -> Sub-app Middleware: {len(sub_app.user_middleware)}")

@@ -1,6 +1,6 @@
+from starlette.routing import Mount, Route
 
 from src.server import app
-from starlette.routing import Route, Mount
 
 print("Registered Routes:")
 for route in app.routes:

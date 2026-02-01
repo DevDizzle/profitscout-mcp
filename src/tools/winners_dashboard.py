@@ -5,7 +5,6 @@ Get today's top-ranked options signals across all tickers
 
 import json
 import logging
-from typing import Optional
 
 from data.bigquery_client import BigQueryClient
 
@@ -17,8 +16,8 @@ bq_client = BigQueryClient()
 
 async def get_winners_dashboard(
     limit: int = 10,
-    option_type: Optional[str] = None,
-    min_quality: Optional[str] = None,
+    option_type: str | None = None,
+    min_quality: str | None = None,
 ) -> str:
     """Get today's top-ranked options signals.
 

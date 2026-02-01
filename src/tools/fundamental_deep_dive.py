@@ -5,7 +5,6 @@ Retrieves deep fundamental context: Macro Thesis, MD&A, and Transcript Analysis.
 
 import json
 import logging
-from typing import Optional
 
 from data.gcs_client import GCSClient
 
@@ -17,9 +16,9 @@ gcs_client = GCSClient()
 
 async def get_macro_thesis(as_of: str = "latest") -> str:
     """Get the current macro-economic thesis to understand market conditions.
-    
-    Provides top-down context on interest rates, inflation, sector rotation, 
-    and geopolitical risks. Use this to validate if a trade setup aligns 
+
+    Provides top-down context on interest rates, inflation, sector rotation,
+    and geopolitical risks. Use this to validate if a trade setup aligns
     with the broader market environment.
 
     Args:
@@ -38,8 +37,8 @@ async def get_macro_thesis(as_of: str = "latest") -> str:
 
 async def get_mda_analysis(ticker: str, as_of: str = "latest") -> str:
     """Get analysis of the Management Discussion & Analysis (MD&A) section.
-    
-    Extracts insights from 10-K/10-Q filings, highlighting risks, 
+
+    Extracts insights from 10-K/10-Q filings, highlighting risks,
     future outlooks, and operational changes that raw numbers might miss.
 
     Args:
@@ -52,7 +51,7 @@ async def get_mda_analysis(ticker: str, as_of: str = "latest") -> str:
     try:
         if not ticker:
             return json.dumps({"error": "Ticker is required"})
-            
+
         result = await gcs_client.get_mda_analysis(ticker, as_of)
         return json.dumps(result, indent=2)
     except Exception as e:
@@ -62,8 +61,8 @@ async def get_mda_analysis(ticker: str, as_of: str = "latest") -> str:
 
 async def get_transcript_analysis(ticker: str, as_of: str = "latest") -> str:
     """Get analysis of recent Earnings Call Transcripts.
-    
-    Analyzes executive tone, Q&A confidence, and forward guidance 
+
+    Analyzes executive tone, Q&A confidence, and forward guidance
     to detect if management is confident or defensive.
 
     Args:
@@ -76,7 +75,7 @@ async def get_transcript_analysis(ticker: str, as_of: str = "latest") -> str:
     try:
         if not ticker:
             return json.dumps({"error": "Ticker is required"})
-            
+
         result = await gcs_client.get_transcript_analysis(ticker, as_of)
         return json.dumps(result, indent=2)
     except Exception as e:

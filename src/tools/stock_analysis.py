@@ -5,7 +5,6 @@ Get comprehensive analysis for a specific stock
 
 import json
 import logging
-from typing import List, Optional
 
 from data.bigquery_client import BigQueryClient
 from data.gcs_client import GCSClient
@@ -19,14 +18,14 @@ gcs_client = GCSClient()
 
 async def get_stock_analysis(
     ticker: str,
-    include_sections: Optional[List[str]] = None,
+    include_sections: list[str] | None = None,
     as_of: str = "latest",
 ) -> str:
     """Get comprehensive stock analysis including fundamentals, financials, business, technicals, news, and reports.
 
     Combines data from multiple ProfitScout analysis pipelines to provide
     a complete picture of the stock's current state and outlook.
-    
+
     Available Sections:
     - "business": Business summary and profile.
     - "fundamentals": Key valuation metrics (P/E, Market Cap).
@@ -50,11 +49,8 @@ async def get_stock_analysis(
         ticker = ticker.strip().upper()
 
         # Default to all sections if not specified
-        valid_sections = [
-            "business", "fundamentals", "financials", 
-            "technicals", "news"
-        ]
-        
+        valid_sections = ["business", "fundamentals", "financials", "technicals", "news"]
+
         if not include_sections:
             include_sections = valid_sections
 

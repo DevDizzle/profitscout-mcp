@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+
 
 def get_support_policy(topic: str = "general") -> str:
     """
@@ -20,19 +20,19 @@ def get_support_policy(topic: str = "general") -> str:
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
     # Assuming src/tools/customer_service.py -> ../../../ -> root
     # Wait, src/tools/customer_service.py -> src/tools/ -> src/ -> root. That's 3 levels up.
-    # Original code: 
+    # Original code:
     # current_dir = os.path.dirname(os.path.abspath(__file__)) (src/tools)
     # project_root = os.path.dirname(os.path.dirname(current_dir)) (root)
     # This was correct: src/tools (dir) -> src (parent) -> root (parent of parent)
-    
+
     # New path is docs/customer-service-policy.md
-    
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(current_dir))
     policy_path = os.path.join(project_root, "docs", "customer-service-policy.md")
 
     try:
-        with open(policy_path, "r", encoding="utf-8") as f:
+        with open(policy_path, encoding="utf-8") as f:
             content = f.read()
     except FileNotFoundError:
         return "Error: Customer Service Policy file not found."
@@ -44,7 +44,7 @@ def get_support_policy(topic: str = "general") -> str:
         # Extract Core Principles
         principles_start = content.find("## Core Principles")
         faq_start = content.find("## Common Questions & Answers")
-        
+
         if principles_start != -1 and faq_start != -1:
             principles = content[principles_start:faq_start].strip()
             # Just grab the intro of the FAQ section or list headers
@@ -86,14 +86,14 @@ def get_support_policy(topic: str = "general") -> str:
 
     # Check for direct keyword matches
     search_phrase = keywords.get(topic_lower, topic_lower)
-    
+
     # Simple semantic-ish search: find the section containing the phrase
     if search_phrase in content.lower():
         # Find the header roughly associated with this
-        lines = content.split('\n')
+        lines = content.split("\n")
         result_lines = []
         capturing = False
-        
+
         for line in lines:
             # simple header detection
             if line.startswith("#"):
@@ -101,22 +101,22 @@ def get_support_policy(topic: str = "general") -> str:
                     capturing = True
                 elif capturing and line.startswith("##"):
                     capturing = False
-            
+
             # If we are in a capturing block OR the line contains the search phrase directly
             if capturing or search_phrase in line.lower():
-                 # If we found the phrase in a non-header line, capture context around it
-                 if not capturing and search_phrase in line.lower():
-                     # This is a fallback for when the topic is in the body text
-                     return f"Found mention of '{topic}':\n\n{line}\n..."
-                 
-                 result_lines.append(line)
-        
+                # If we found the phrase in a non-header line, capture context around it
+                if not capturing and search_phrase in line.lower():
+                    # This is a fallback for when the topic is in the body text
+                    return f"Found mention of '{topic}':\n\n{line}\n..."
+
+                result_lines.append(line)
+
         if result_lines:
             return "\n".join(result_lines)
 
     # Fallback: If no specific match, return the FAQ section as it covers most issues
     faq_start = content.find("## Common Questions & Answers")
     if faq_start != -1:
-         return f"Specific topic '{topic}' not found. Here is the FAQ:\n\n" + content[faq_start:]
-    
+        return f"Specific topic '{topic}' not found. Here is the FAQ:\n\n" + content[faq_start:]
+
     return "Could not find relevant policy information. Please contact a human supervisor."
