@@ -10,7 +10,7 @@ import secrets
 def generate_api_key() -> str:
     """Generate a secure API key.
 
-    Format: ps_live_{32_hex_chars}
+    Format: gr_live_{32_hex_chars}
 
     Returns:
         str: A secure API key
@@ -18,8 +18,8 @@ def generate_api_key() -> str:
     # Generate 32 random bytes and convert to hex
     random_hex = secrets.token_hex(16)  # 16 bytes = 32 hex chars
 
-    # Format: ps_live_{random_hex}
-    api_key = f"ps_live_{random_hex}"
+    # Format: gr_live_{random_hex}
+    api_key = f"gr_live_{random_hex}"
 
     return api_key
 
