@@ -8,11 +8,11 @@ set -e  # Exit on error
 # Configuration
 PROJECT_ID="${GCP_PROJECT_ID:-profitscout-lx6bb}"
 REGION="${GCP_REGION:-us-central1}"
-SERVICE_NAME="profitscout-mcp"
-REPOSITORY_NAME="profitscout-mcp"
+SERVICE_NAME="gammarips-mcp"
+REPOSITORY_NAME="gammarips-mcp"
 
 echo "========================================="
-echo "ProfitScout MCP Server Deployment"
+echo "GammaRips MCP Server Deployment"
 echo "========================================="
 echo "Project ID: $PROJECT_ID"
 echo "Region: $REGION"
@@ -57,7 +57,7 @@ gcloud run deploy $SERVICE_NAME \
     --cpu=1 \
     --timeout=300 \
     --max-instances=10 \
-    --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID,GCP_REGION=$REGION,BIGQUERY_DATASET=profit_scout,GCS_BUCKET_NAME=profit-scout-data,GOOGLE_CSE_ID=${GOOGLE_CSE_ID},GOOGLE_API_KEY=${GOOGLE_API_KEY}"
+    --set-env-vars="GCP_PROJECT_ID=$PROJECT_ID,GCP_REGION=$REGION,BIGQUERY_DATASET=profit_scout,GCS_BUCKET_NAME=profit-scout-data,GOOGLE_CSE_ID=${GOOGLE_CSE_ID},GOOGLE_API_KEY=${GOOGLE_API_KEY},REQUIRE_API_KEY=true,FIRESTORE_COLLECTION_USERS=users"
 
 echo ""
 echo "========================================="

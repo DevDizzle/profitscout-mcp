@@ -11,8 +11,8 @@ on:
 env:
   PROJECT_ID: profitscout-lx6bb
   REGION: us-central1
-  SERVICE: profitscout-mcp
-  REPOSITORY: profitscout-mcp
+  SERVICE: gammarips-mcp
+  REPOSITORY: gammarips-mcp
 
 jobs:
   deploy:

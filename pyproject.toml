@@ -1,7 +1,7 @@
 [project]
-name = "profitscout-mcp"
+name = "gammarips-mcp"
 version = "1.0.0"
-description = "ProfitScout MCP Server - Agent-first options trading intelligence"
+description = "GammaRips MCP Server - Agent-first options trading intelligence"
 requires-python = ">=3.10"
 dependencies = [
     "fastmcp>=2.6.1",

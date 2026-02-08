@@ -1,4 +1,4 @@
-# Cloud Build configuration for ProfitScout MCP Server
+# Cloud Build configuration for GammaRips MCP Server
 # This file defines the build steps for automated CI/CD
 
 steps:
@@ -47,8 +47,8 @@ steps:
 # Substitutions (can be overridden at build time)
 substitutions:
   _REGION: us-central1
-  _REPOSITORY: profitscout-mcp
-  _SERVICE: profitscout-mcp
+  _REPOSITORY: gammarips-mcp
+  _SERVICE: gammarips-mcp
 
 # Images to be pushed to Artifact Registry
 images:
