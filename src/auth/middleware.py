@@ -21,7 +21,7 @@ class AuthMiddleware:
 
         if self.require_api_key:
             self.db = firestore.Client(project=self.project_id)
-            self.users_collection = os.getenv("FIRESTORE_COLLECTION_USERS", "taas_users")
+            self.users_collection = os.getenv("FIRESTORE_COLLECTION_USERS", "users")
             self.usage_collection = os.getenv("FIRESTORE_COLLECTION_USAGE", "usage_logs")
             logger.info("Authentication middleware enabled")
         else:
@@ -54,7 +54,10 @@ class AuthMiddleware:
 
         # Check if API key is provided
         if not api_key:
-            raise ValueError("API key is required. Include X-API-Key header in your request.")
+            raise ValueError(
+                "API key required. Get your key at https://gammarips.com/developers — "
+                "Subscribe for $19/mo and generate your API key in your account dashboard."
+            )
 
         # Hash the provided API key
         api_key_hash = self._hash_api_key(api_key)
@@ -62,31 +65,58 @@ class AuthMiddleware:
         # Query Firestore for the user
         try:
             users_ref = self.db.collection(self.users_collection)
-            query = users_ref.where("api_key_hash", "==", api_key_hash).limit(1)
+            query = users_ref.where("apiKeyHash", "==", api_key_hash).limit(1)
             docs = query.stream()
 
             user_doc = next(docs, None)
 
             if not user_doc:
-                raise ValueError("Invalid API key")
+                raise ValueError(
+                    "Invalid API key. Check your key at https://gammarips.com/account — "
+                    "If you don't have an account, subscribe at https://gammarips.com/developers"
+                )
 
             user_data = user_doc.to_dict()
             user_data["user_id"] = user_doc.id
 
-            # Check subscription status
-            if user_data.get("subscription_status") != "active":
+            # Check subscription status (webapp uses isSubscribed boolean)
+            is_subscribed = user_data.get("isSubscribed", False)
+
+            # Also check trial period (proUntil timestamp)
+            pro_until = user_data.get("proUntil")
+            in_trial = False
+            if pro_until:
+                try:
+                    from datetime import datetime
+                    # Handle Firestore timestamp or standard datetime
+                    if hasattr(pro_until, 'timestamp'):
+                        ts = pro_until.timestamp()
+                    else:
+                        ts = pro_until
+                        
+                    in_trial = ts > datetime.now().timestamp()
+                except Exception:
+                    pass
+
+            if not is_subscribed and not in_trial:
                 raise ValueError(
-                    f"Subscription is {user_data.get('subscription_status')}. "
-                    "Please update your payment information at gammarips.com"
+                    "Subscription required. Your trial has expired or subscription is inactive. "
+                    "Reactivate at https://gammarips.com/account — $19/mo for full API access."
                 )
 
             return user_data
 
         except StopIteration:
-            raise ValueError("Invalid API key")
+            raise ValueError(
+                "Invalid API key. Check your key at https://gammarips.com/account — "
+                "If you don't have an account, subscribe at https://gammarips.com/developers"
+            )
         except Exception as e:
             logger.error(f"Error validating API key: {e}", exc_info=True)
-            raise ValueError("Authentication failed")
+            raise ValueError(
+                "Authentication failed. If this persists, contact support@gammarips.com — "
+                "New users: subscribe at https://gammarips.com/developers"
+            )
 
     async def track_usage(self, user_id: str, tool_name: str) -> None:
         """Track tool usage for billing and analytics.

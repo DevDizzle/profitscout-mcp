@@ -23,7 +23,9 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP(name="gammarips", host="0.0.0.0", port=int(os.getenv("PORT", "8080")))
 
 # Import authentication middleware (Phase 2)
-# from auth.middleware import auth_middleware
+from auth.middleware import auth_middleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
 # Import tools
 from tools.business_summary import get_business_summary
@@ -92,6 +94,66 @@ try:
         logger.warning("Could not import TrustedHostMiddleware for patching, skipping.")
     except Exception as e:
         logger.error(f"Failed to apply TrustedHostMiddleware patch: {e}", exc_info=True)
+
+    # --- Authentication Middleware ---
+    class APIKeyMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            # Skip auth for health checks or public endpoints
+            if request.url.path in ["/healthz", "/metrics", "/favicon.ico"]:
+                return await call_next(request)
+            
+            # Skip if auth is disabled via env var
+            if not auth_middleware.require_api_key:
+                return await call_next(request)
+
+            # Extract API key from headers (X-API-Key or Authorization Bearer) or query param
+            api_key = request.headers.get("X-API-Key")
+            if not api_key:
+                auth_header = request.headers.get("Authorization", "")
+                if auth_header.startswith("Bearer "):
+                    api_key = auth_header.replace("Bearer ", "")
+            
+            # Fallback to query param
+            if not api_key:
+                api_key = request.query_params.get("api_key")
+            
+            try:
+                user = await auth_middleware.validate_api_key(api_key)
+                # Store user info in scope for tools to access (if needed)
+                request.scope["user"] = user
+                
+                # Track usage (optional - logic could be more granular per tool)
+                # await auth_middleware.track_usage(user["user_id"], "api_access")
+                
+                response = await call_next(request)
+                return response
+            except ValueError as e:
+                logger.warning(f"Auth failed: {e}")
+                return JSONResponse(
+                    {
+                        "error": str(e),
+                        "signup_url": "https://gammarips.com/developers",
+                        "docs_url": "https://gammarips.com/developers#quick-start",
+                        "support_email": "support@gammarips.com",
+                    },
+                    status_code=401,
+                )
+            except Exception as e:
+                logger.error(f"Auth error: {e}", exc_info=True)
+                return JSONResponse(
+                    {
+                        "error": "Internal authentication error",
+                        "signup_url": "https://gammarips.com/developers",
+                        "docs_url": "https://gammarips.com/developers#quick-start",
+                        "support_email": "support@gammarips.com",
+                    },
+                    status_code=500,
+                )
+
+    # Add the middleware
+    if os.getenv("REQUIRE_API_KEY", "false").lower() == "true":
+        app.add_middleware(APIKeyMiddleware)
+        logger.info("API Key Middleware added to application pipeline")
 
 except Exception as e:
     logger.error(f"Failed to create ASGI app: {e}", exc_info=True)
