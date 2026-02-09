@@ -42,10 +42,12 @@ from tools.performance_tracker import get_performance_summary, get_performance_t
 from tools.price_data_sql import run_price_query
 from tools.stock_analysis import get_stock_analysis
 from tools.technical_analysis import get_technical_analysis
+from tools.top_picks_analysis import get_top_picks_analysis
 from tools.web_search import web_search
 from tools.winners_dashboard import get_winners_dashboard
 
 # Register tools with the MCP server
+mcp.tool()(get_top_picks_analysis)
 mcp.tool()(get_winners_dashboard)
 mcp.tool()(get_stock_analysis)
 mcp.tool()(get_macro_thesis)
@@ -69,6 +71,24 @@ def get_tools_list():
     """Return the list of available MCP tools"""
     return [
         {
+            "name": "get_top_picks_analysis",
+            "description": "🎯 RECOMMENDED: Get fully analyzed top options picks with all supporting data. Runs complete analysis playbook: winners dashboard → deep dives (news, technicals, market structure, events) → scoring → formatted picks with entry/exit levels and thesis.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "limit": {"type": "integer", "description": "Number of top picks (1-5)", "default": 3},
+                    "include_macro": {"type": "boolean", "description": "Include macro context", "default": True},
+                    "option_type": {"type": "string", "description": "Filter: CALL or PUT"}
+                }
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
+            }
+        },
+        {
             "name": "get_winners_dashboard",
             "description": "Get top options signals ranked by conviction. Filter by quality, option type.",
             "inputSchema": {
@@ -76,8 +96,15 @@ def get_tools_list():
                 "properties": {
                     "limit": {"type": "integer", "description": "Max results to return", "default": 10},
                     "min_quality": {"type": "string", "description": "Minimum quality filter (High, Medium, Low)"},
-                    "option_type": {"type": "string", "description": "Filter by CALL or PUT"}
+                    "option_type": {"type": "string", "description": "Filter by CALL or PUT"},
+                    "as_of": {"type": "string", "description": "Date (YYYY-MM-DD) or 'latest'", "default": "latest"}
                 }
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
             }
         },
         {
@@ -88,12 +115,24 @@ def get_tools_list():
                 "properties": {
                     "days": {"type": "integer", "description": "Number of days to look back", "default": 30}
                 }
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
             }
         },
         {
             "name": "get_performance_summary",
             "description": "Aggregate stats across all tracked signals.",
-            "inputSchema": {"type": "object", "properties": {}}
+            "inputSchema": {"type": "object", "properties": {}},
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
+            }
         },
         {
             "name": "get_stock_analysis",
@@ -104,6 +143,12 @@ def get_tools_list():
                     "ticker": {"type": "string", "description": "Stock ticker symbol"}
                 },
                 "required": ["ticker"]
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
             }
         },
         {
@@ -112,26 +157,50 @@ def get_tools_list():
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "ticker": {"type": "string", "description": "Stock ticker symbol"}
+                    "ticker": {"type": "string", "description": "Stock ticker symbol"},
+                    "as_of": {"type": "string", "description": "Date (YYYY-MM-DD) or 'latest'", "default": "latest"}
                 },
                 "required": ["ticker"]
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
             }
         },
         {
             "name": "analyze_market_structure",
-            "description": "Options flow analysis: vol/OI walls, Greeks scanner.",
+            "description": "Options flow analysis: vol/OI walls, Greeks scanner. Use sort_by for contract details.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "ticker": {"type": "string", "description": "Stock ticker symbol"}
+                    "ticker": {"type": "string", "description": "Stock ticker symbol (e.g., NVDA)"},
+                    "as_of": {"type": "string", "description": "Date (YYYY-MM-DD) or 'latest'", "default": "latest"},
+                    "sort_by": {"type": "string", "description": "Sort contracts by: gamma, delta, volume, oi, iv"},
+                    "expiration_date": {"type": "string", "description": "Filter by expiration (YYYY-MM-DD)"},
+                    "option_type": {"type": "string", "description": "Filter by CALL or PUT"},
+                    "limit": {"type": "integer", "description": "Number of contracts to return", "default": 20}
                 },
                 "required": ["ticker"]
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
             }
         },
         {
             "name": "get_macro_thesis",
             "description": "Current market conditions, sector rotation, risk factors.",
-            "inputSchema": {"type": "object", "properties": {}}
+            "inputSchema": {"type": "object", "properties": {}},
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
+            }
         },
         {
             "name": "get_market_events",
@@ -139,8 +208,17 @@ def get_tools_list():
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "days_ahead": {"type": "integer", "description": "Days to look ahead", "default": 7}
+                    "start_date": {"type": "string", "description": "Start date (YYYY-MM-DD). Defaults to today."},
+                    "days_forward": {"type": "integer", "description": "Days to look ahead", "default": 7},
+                    "ticker": {"type": "string", "description": "Optional filter by stock ticker"},
+                    "event_type": {"type": "string", "description": "Filter by 'Earnings', 'Economic', 'Dividend', 'Split', 'IPO'"}
                 }
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
             }
         },
         {
@@ -149,9 +227,16 @@ def get_tools_list():
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "ticker": {"type": "string", "description": "Stock ticker symbol"}
+                    "ticker": {"type": "string", "description": "Stock ticker symbol"},
+                    "as_of": {"type": "string", "description": "Date (YYYY-MM-DD) or 'latest'", "default": "latest"}
                 },
                 "required": ["ticker"]
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
             }
         },
         {
@@ -163,6 +248,12 @@ def get_tools_list():
                      "ticker": {"type": "string", "description": "Stock ticker symbol"}
                 },
                 "required": ["ticker"]
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
             }
         },
         {
@@ -174,6 +265,12 @@ def get_tools_list():
                      "ticker": {"type": "string", "description": "Stock ticker symbol"}
                 },
                 "required": ["ticker"]
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
             }
         },
         {
@@ -185,6 +282,12 @@ def get_tools_list():
                      "ticker": {"type": "string", "description": "Stock ticker symbol"}
                 },
                 "required": ["ticker"]
+            },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
             }
         },
         {
@@ -196,7 +299,13 @@ def get_tools_list():
                      "query": {"type": "string", "description": "SQL query"}
                  },
                  "required": ["query"]
-             }
+             },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
+            }
         },
         {
              "name": "web_search",
@@ -207,7 +316,13 @@ def get_tools_list():
                      "query": {"type": "string", "description": "Search query"}
                  },
                  "required": ["query"]
-             }
+             },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": False,
+                "openWorldHint": True
+            }
         },
         {
              "name": "get_support_policy",
@@ -217,7 +332,13 @@ def get_tools_list():
                  "properties": {
                      "query": {"type": "string", "description": "User question"}
                  }
-             }
+             },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
+            }
         },
         {
              "name": "get_mda_analysis",
@@ -228,7 +349,13 @@ def get_tools_list():
                      "ticker": {"type": "string", "description": "Stock ticker symbol"}
                  },
                  "required": ["ticker"]
-             }
+             },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
+            }
         },
         {
              "name": "get_transcript_analysis",
@@ -239,7 +366,13 @@ def get_tools_list():
                      "ticker": {"type": "string", "description": "Stock ticker symbol"}
                  },
                  "required": ["ticker"]
-             }
+             },
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": False
+            }
         }
     ]
 
@@ -247,6 +380,7 @@ def get_tools_list():
 async def execute_tool(tool_name: str, args: dict, user_info: dict) -> str:
     """Execute a tool by name with provided arguments."""
     tool_map = {
+        "get_top_picks_analysis": get_top_picks_analysis,
         "get_winners_dashboard": get_winners_dashboard,
         "get_stock_analysis": get_stock_analysis,
         "get_macro_thesis": get_macro_thesis,
@@ -287,16 +421,65 @@ async def server_card(request: Request):
     return JSONResponse({
         "serverInfo": {
             "name": "GammaRips",
+            "displayName": "GammaRips Options Intelligence",
             "version": "1.0.0",
-            "description": "AI-powered options trading signals. Get high-conviction setups backed by fundamentals, technicals, and options flow analysis."
+            "description": "AI-powered options trading signals. Get high-conviction setups backed by fundamentals, technicals, and options flow analysis. 64% win rate across 200+ tracked signals.",
+            "homepage": "https://gammarips.com/developers",
+            "icon": "https://gammarips.com/logo.png"
         },
         "authentication": {
             "required": True,
-            "schemes": ["api-key"]
+            "schemes": ["api-key"],
+            "instructions": "Get your API key at https://gammarips.com/developers. Pass via X-API-Key header."
+        },
+        "configuration": {
+            "type": "object",
+            "properties": {
+                "apiKey": {
+                    "type": "string",
+                    "description": "Your GammaRips API key (starts with gr_live_)",
+                    "secret": True
+                }
+            },
+            "required": ["apiKey"]
         },
         "tools": get_tools_list(),
         "resources": [],
-        "prompts": []
+        "prompts": [
+            {
+                "name": "get_trading_signals",
+                "description": "Get today's highest-conviction options trading signals with full analysis",
+                "arguments": [
+                    {
+                        "name": "focus",
+                        "description": "Optional focus: 'calls', 'puts', or 'both'",
+                        "required": False
+                    }
+                ]
+            },
+            {
+                "name": "analyze_ticker",
+                "description": "Run comprehensive analysis on a specific stock ticker",
+                "arguments": [
+                    {
+                        "name": "ticker",
+                        "description": "Stock ticker symbol (e.g., NVDA, AAPL)",
+                        "required": True
+                    }
+                ]
+            },
+            {
+                "name": "check_earnings_risk",
+                "description": "Check if a ticker has upcoming earnings that could affect options positions",
+                "arguments": [
+                    {
+                        "name": "ticker",
+                        "description": "Stock ticker symbol",
+                        "required": True
+                    }
+                ]
+            }
+        ]
     })
 
 
@@ -532,23 +715,24 @@ def main():
     logger.info("========================================")
     logger.info("")
     logger.info("Available tools:")
-    logger.info("  1. get_winners_dashboard - Get today's top options signals")
-    logger.info("  2. analyze_market_structure - Analyze options flow (Vol/OI Walls)")
-    logger.info("  3. get_stock_analysis - Get comprehensive stock analysis (Master Tool)")
-    logger.info("  4. get_macro_thesis - Get market context")
-    logger.info("  5. get_mda_analysis - Get 10-K/Q insights")
-    logger.info("  6. get_transcript_analysis - Get earnings call insights")
-    logger.info("  7. get_technical_analysis - Get technical analysis")
-    logger.info("  8. get_news_analysis - Get news sentiment analysis")
-    logger.info("  9. get_business_summary - Get business profile")
-    logger.info("  10. get_fundamental_analysis - Get fundamental metrics")
-    logger.info("  11. get_financial_analysis - Get financial health analysis")
-    logger.info("  12. run_price_query - Run custom SQL on price data")
-    logger.info("  13. get_market_events - Get upcoming calendar events (Earnings, Econ)")
-    logger.info("  14. web_search - Search the web for real-time info")
-    logger.info("  15. get_support_policy - Get customer service policy/FAQ")
-    logger.info("  16. get_performance_tracker - Get signal performance history")
-    logger.info("  17. get_performance_summary - Get aggregate performance stats")
+    logger.info("  1. get_top_picks_analysis - 🎯 RECOMMENDED: Full trading analysis & top picks")
+    logger.info("  2. get_winners_dashboard - Get today's top options signals")
+    logger.info("  3. analyze_market_structure - Analyze options flow (Vol/OI Walls)")
+    logger.info("  4. get_stock_analysis - Get comprehensive stock analysis (Master Tool)")
+    logger.info("  5. get_macro_thesis - Get market context")
+    logger.info("  6. get_mda_analysis - Get 10-K/Q insights")
+    logger.info("  7. get_transcript_analysis - Get earnings call insights")
+    logger.info("  8. get_technical_analysis - Get technical analysis")
+    logger.info("  9. get_news_analysis - Get news sentiment analysis")
+    logger.info("  10. get_business_summary - Get business profile")
+    logger.info("  11. get_fundamental_analysis - Get fundamental metrics")
+    logger.info("  12. get_financial_analysis - Get financial health analysis")
+    logger.info("  13. run_price_query - Run custom SQL on price data")
+    logger.info("  14. get_market_events - Get upcoming calendar events (Earnings, Econ)")
+    logger.info("  15. web_search - Search the web for real-time info")
+    logger.info("  16. get_support_policy - Get customer service policy/FAQ")
+    logger.info("  17. get_performance_tracker - Get signal performance history")
+    logger.info("  18. get_performance_summary - Get aggregate performance stats")
     logger.info("")
     logger.info("Starting server...")
 
