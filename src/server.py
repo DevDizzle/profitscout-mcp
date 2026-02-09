@@ -285,46 +285,18 @@ async def server_card(request: Request):
     https://smithery.ai/docs/build/external#server-scanning
     """
     return JSONResponse({
-        "name": "GammaRips",
-        "description": "AI-powered options trading signals. Get high-conviction setups backed by fundamentals, technicals, and options flow analysis. 17 tools including winners dashboard, performance tracking, stock analysis, and market structure.",
-        "version": "1.0.0",
-        "author": {
+        "serverInfo": {
             "name": "GammaRips",
-            "url": "https://gammarips.com"
-        },
-        "documentation": "https://gammarips.com/developers",
-        "pricing": {
-            "type": "paid",
-            "price": "$19/mo",
-            "trial": False
+            "version": "1.0.0",
+            "description": "AI-powered options trading signals. Get high-conviction setups backed by fundamentals, technicals, and options flow analysis."
         },
         "authentication": {
-            "type": "api_key",
-            "header": "X-API-Key",
-            "instructions": "Get your API key at https://gammarips.com/account after subscribing ($19/mo)"
+            "required": True,
+            "schemes": ["api-key"]
         },
-        "endpoints": {
-            "sse": "/sse",
-            "rpc": "/rpc"
-        },
-        "tools": [
-            {"name": "get_winners_dashboard", "description": "Top options signals ranked by conviction"},
-            {"name": "get_performance_tracker", "description": "Historical signal performance"},
-            {"name": "get_performance_summary", "description": "Aggregate stats"},
-            {"name": "get_stock_analysis", "description": "Full stock analysis"},
-            {"name": "get_technical_analysis", "description": "RSI, MACD, patterns"},
-            {"name": "analyze_market_structure", "description": "Options flow, Greeks"},
-            {"name": "get_macro_thesis", "description": "Market conditions"},
-            {"name": "get_market_events", "description": "Earnings, calendar"},
-            {"name": "get_news_analysis", "description": "News sentiment"}
-        ],
-        "categories": ["finance", "trading", "options", "stocks"],
-        "links": {
-            "website": "https://gammarips.com",
-            "docs": "https://gammarips.com/developers",
-            "support": "mailto:support@gammarips.com",
-            "twitter": "https://x.com/GammaRips"
-        }
+        "tools": get_tools_list(),
+        "resources": [],
+        "prompts": []
     })
 
 
