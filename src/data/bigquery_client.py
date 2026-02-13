@@ -140,7 +140,7 @@ class BigQueryClient:
         limit: int = 20,
     ) -> dict[str, Any]:
         """Get overnight signals from BigQuery."""
-        table_name = os.getenv("OVERNIGHT_SIGNALS_TABLE", "overnight_signals_enriched")
+        table_name = os.getenv("OVERNIGHT_SIGNALS_TABLE", "overnight_signals")
         table_id = self._get_table_id(table_name)
 
         if date == "latest":
@@ -180,6 +180,11 @@ class BigQueryClient:
                 for key, value in sig.items():
                     if hasattr(value, "isoformat"):
                         sig[key] = value.isoformat()
+                
+                # Map 'signals' to 'key_signals' for frontend compatibility if needed
+                if "signals" in sig and "key_signals" not in sig:
+                    sig["key_signals"] = sig["signals"]
+                
                 signals.append(sig)
 
             return {
@@ -193,7 +198,7 @@ class BigQueryClient:
 
     async def get_signal_detail(self, ticker: str, date: str = "latest") -> dict[str, Any] | None:
         """Get detailed signal for a ticker."""
-        table_name = os.getenv("OVERNIGHT_SIGNALS_TABLE", "overnight_signals_enriched")
+        table_name = os.getenv("OVERNIGHT_SIGNALS_TABLE", "overnight_signals")
         table_id = self._get_table_id(table_name)
 
         if date == "latest":
@@ -228,6 +233,10 @@ class BigQueryClient:
                 if hasattr(value, "isoformat"):
                     sig[key] = value.isoformat()
             
+            # Map 'signals' to 'key_signals'
+            if "signals" in sig and "key_signals" not in sig:
+                sig["key_signals"] = sig["signals"]
+            
             return sig
         except Exception as e:
             logger.error(f"Error getting signal detail for {ticker}: {e}")
@@ -235,13 +244,14 @@ class BigQueryClient:
 
     async def get_top_movers(self, count: int = 5) -> dict[str, Any]:
         """Get top bullish and bearish movers."""
-        table_name = os.getenv("OVERNIGHT_SIGNALS_TABLE", "overnight_signals_enriched")
+        table_name = os.getenv("OVERNIGHT_SIGNALS_TABLE", "overnight_signals")
         table_id = self._get_table_id(table_name)
         run_date = self._get_latest_run_date(table_name, date_col="scan_date")
 
         # Get Bullish
+        # Note: catalyst_summary is missing in current schema, selecting NULL
         bull_query = f"""
-        SELECT ticker, overnight_score, price_change_pct, key_signals, catalyst_summary
+        SELECT ticker, overnight_score, price_change_pct, signals as key_signals, CAST(NULL as STRING) as catalyst_summary
         FROM `{table_id}`
         WHERE scan_date = CAST(@run_date AS DATE) AND direction = 'BULLISH'
         ORDER BY overnight_score DESC, price_change_pct DESC
@@ -250,7 +260,7 @@ class BigQueryClient:
         
         # Get Bearish
         bear_query = f"""
-        SELECT ticker, overnight_score, price_change_pct, key_signals, catalyst_summary
+        SELECT ticker, overnight_score, price_change_pct, signals as key_signals, CAST(NULL as STRING) as catalyst_summary
         FROM `{table_id}`
         WHERE scan_date = CAST(@run_date AS DATE) AND direction = 'BEARISH'
         ORDER BY overnight_score DESC, price_change_pct ASC
