@@ -9,6 +9,7 @@ import inspect
 import json
 import logging
 import os
+import sys
 import time
 
 from dotenv import load_dotenv
@@ -643,6 +644,16 @@ def main():
         logger.info(f"  {i:2d}. {name}")
     logger.info("")
     logger.info("Starting server...")
+
+    # stdio transport (2026-09-08): `python src/server.py --stdio` or
+    # MCP_TRANSPORT=stdio. Glama's build check wraps the server in mcp-proxy,
+    # which speaks stdio to the child. Logging goes to stderr (basicConfig
+    # default), so stdout stays clean for JSON-RPC. Production (Cloud Run)
+    # never sets either and keeps the HTTP path below.
+    if "--stdio" in sys.argv[1:] or os.getenv("MCP_TRANSPORT", "").strip().lower() == "stdio":
+        logger.info("Transport: stdio")
+        mcp.run(transport="stdio")
+        return
 
     port = int(os.getenv("PORT", "8080"))
     logger.info(f"Binding to host: 0.0.0.0 and port: {port}")
